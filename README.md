@@ -57,8 +57,6 @@
 
 The RT Search Application is a sophisticated multi-component system that provides **AI-powered search functionality** for Request Tracker tickets. It combines semantic search, keyword matching, and AI-generated summaries to deliver comprehensive ticket analysis and retrieval capabilities.
 
-> **Live Demo**: [https://rtaisearch.searchmobius.org](https://rtaisearch.searchmobius.org)
-
 ---
 
 ## Features
@@ -745,9 +743,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 <div align="center">
 
 ### Built with care by MOBIUS Consortium
-
-[Website](https://mobiusconsortium.org) • [RT System](https://help.mobiusconsortium.org) • [Contact](mailto:support@mobiusconsortium.org)
-
 **Powering library technology across Missouri and beyond**
 
 </div>
