@@ -1,0 +1,357 @@
+/* search.component.css */
+/* Core container with fixed width */
+.search-container {
+  width: 800px; /* Fixed explicit width */
+  margin: 0 auto; /* Center horizontally */
+  position: relative;
+  padding: 0; /* No padding that could affect layout */
+  box-sizing: border-box;
+}
+
+.search-title {
+  color: #555;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  display: block;
+  width: 800px;
+  font-size: 1.4rem;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  color: #1d1d1f;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  position: relative;
+  padding: 10px 10px 10px 35px;
+  z-index: 10;
+  transition: border-radius 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  /*background: rgba(255, 255, 255, 0.95);*/
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Change shadow when results are showing */
+.search-container.has-results .search-input {
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* Remove shadow when results showing */
+}
+
+/* Change border radius when results are showing */
+.search-container.has-results .search-input {
+  border-radius: 8px 8px 0 0; /* Only round top corners when results showing */
+}
+
+/* Apply the same border radius change when filter panel is visible */
+.search-container.has-filters .search-input {
+  border-radius: 8px 8px 0 0; /* Only round top corners when filters showing */
+  border-bottom-color: #e0e0e0; /* Lighter bottom border */
+}
+
+/* Styles for the results panel */
+.autocomplete-results {
+  position: absolute;
+  width: 798px;
+  top: 42px; /* Position exactly at the bottom of the input (adjust to match input height) */
+  left: 1px;
+  margin-top: 0;
+  background: white;
+  border-radius: 0 0 12px 12px; /* Only round bottom corners for connected look */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: none;
+  z-index: 9; /* Slightly lower than input to appear under it */
+  box-sizing: border-box;
+  border-top: none; /* No border to create seamless look */
+  transition: top 0.3s ease; /* Add smooth transition for position change */
+}
+
+.autocomplete-results.active {
+  display: block;
+}
+
+/* When both filters and results are visible, position results below the filter panel */
+.autocomplete-results.active.with-filters {
+  top: 280px; /* Approximate position below filter panel */
+}
+
+/* Other elements */
+.powered-by {
+  text-align: right;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #b5b5b5;
+}
+
+.loading {
+  text-align: center;
+  padding: 1.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  z-index: 11;
+}
+
+/* Input with filter icon */
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  z-index: 11;
+}
+
+
+/* Input with filter icon */
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  z-index: 11;
+}
+
+.filter-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  cursor: pointer;
+  z-index: 11;
+  padding: 8px;
+  transition: color 0.2s ease;
+}
+
+.filter-icon.active {
+  color: #1a73e8;
+}
+
+.filter-icon:hover {
+  color: #1a73e8;
+}
+
+/* Filter Panel */
+.filter-panel {
+  position: absolute;
+  top: calc(100% - 23px); /* Using your updated value to overlap with search input */
+  left: 0;
+  width: 100%;
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  padding: 1rem;
+  z-index: 10; /* Same or just below input z-index */
+  box-sizing: border-box;
+  margin-top: 0; /* Remove any margin */
+  border-top: 1px solid #f0f0f0; /* Light top border */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  /* Ensure panel is hidden initially but display:block is still set when visible */
+  display: block;
+  pointer-events: none; /* Prevent clicks when hidden */
+}
+
+.filter-panel.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto; /* Re-enable clicks when visible */
+}
+
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.filter-section h3 {
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+}
+
+.filter-checkbox input {
+  margin-right: 6px;
+}
+
+/* Date Filters */
+.date-filters {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-filter {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.date-filter label {
+  width: 110px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.date-filter input {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* Filter Action Buttons */
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.filter-apply, .filter-reset {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.filter-apply {
+  background-color: #1a73e8;
+  color: white;
+}
+
+.filter-apply:hover {
+  background-color: #1558b9;
+}
+
+.filter-reset {
+  background-color: #f0f0f0;
+  color: #444;
+}
+
+.filter-reset:hover {
+  background-color: #e0e0e0;
+}
+
+/* Results count and active filters */
+.results-header {
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.results-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.results-count {
+  font-weight: 500;
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filters-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tag {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  background-color: #e8f0fe;
+  color: #0099a8;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+}
+
+.filter-tag:hover {
+  background-color: #d2e3fc;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.filter-tag i {
+  font-size: 0.6rem;
+  margin-left: 0.3rem;
+}
+.search-icon.loading-icon {
+  color: #0099a8; /* Blue color to indicate activity */
+}
+
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}

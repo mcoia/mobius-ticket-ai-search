@@ -1,0 +1,60 @@
+# Request tracker authentication credentials
+user = your_rt_username
+pass = your_rt_password
+domain = https://your-rt-domain.com
+
+# Prod Database connection
+dbname = your_database_name
+host = localhost
+username = your_db_username
+password = your_db_password
+schema = request_tracker
+
+# Dev Database connection
+# dbname = postgres
+# host = localhost
+# username = postgres
+# password = postgres
+# schema = request_tracker
+
+# Queue's to monitor
+queues = Queue1,Queue2,Queue3,Queue4
+modules = Module1,Module2,Module3,Module4,Module5,Module6
+search_start_date = 2024-01-01
+
+# General configuration
+log_file = rt.log
+user_agent = Request_Tracker_API
+
+# Elasticsearch configuration
+es_url = http://localhost:9200
+
+# This is the old setup for the office vm
+# es_url = http://your.elastic.server:9200
+es_user = elastic
+es_pass = your_elasticsearch_password
+
+# AI configuration
+prompt_file = resources/prompt/prompt.xml
+
+# OpenAI configuration
+openai_url = https://api.openai.com/v1/chat/completions
+openai_key = sk-your-openai-api-key-here
+openai_model = gpt-4o-mini
+
+# Google AI configuration
+gemini_ai_url = https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+gemini_ai_key = your-gemini-api-key-here
+gemini_ai_model = gemini-2.0-flash
+
+# This is the old setup where the nomic model was in the office
+# nomic_ai_url = http://192.168.11.164:11434
+nomic_ai_url = http://localhost:11434
+nomic_ai_key = no-key-needed
+nomic_ai_model = nomic-embed-text:latest
+
+# Folio Docs - Clone the folio docs repo to this directory.
+folio_docs_path = resources/folio/docs/content/en/docs
+
+# Cloud VM configuration
+cloud_ip = your.cloud.server.ip

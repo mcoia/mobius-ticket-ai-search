@@ -1,0 +1,111 @@
+<!-- search.component.html -->
+<div class="search-title">
+  <h2>Search the Support Ticket Database</h2>
+  <p>Enter keywords, ticket numbers, or phrases to find relevant tickets</p>
+</div>
+
+<div class="search-container" [class.has-results]="showResults" [class.has-filters]="showFilters">
+  <div class="input-with-icon">
+    <!-- Toggle between search icon and spinner based on loading state -->
+    <i *ngIf="!isLoading" class="fa fa-magnifying-glass search-icon"></i>
+    <i *ngIf="isLoading" class="fa fa-spinner fa-spin search-icon loading-icon"></i>
+
+    <input type="text"
+           class="search-input"
+           placeholder="Search tickets..."
+           aria-label="Search"
+           autocomplete="off"
+           [(ngModel)]="searchTerm"
+           (input)="search(searchTerm)"
+           (click)="handleSearchInputClick()">
+    <i class="fa fa-filter filter-icon" [class.active]="showFilters" (click)="toggleFilters($event)"></i>
+  </div>
+  <!-- Filter panel -->
+  <div class="filter-panel" [class.visible]="showFilters">
+    <div class="filter-section">
+      <h3>Queue</h3>
+      <div class="filter-options">
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.queue!.FOLIO"> FOLIO
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.queue!.OpenRS"> OpenRS
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.queue!.Enhancements"> Enhancements
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <h3>Status</h3>
+      <div class="filter-options">
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.status!.open"> Open
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.status!.resolved"> Resolved
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [(ngModel)]="filters.status!.stalled"> Stalled
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-section date-filters">
+      <h3>Date Range</h3>
+      <div class="date-filter">
+        <label>Created From:</label>
+        <input type="date" [(ngModel)]="filters.created!.from">
+      </div>
+      <div class="date-filter">
+        <label>Created To:</label>
+        <input type="date" [(ngModel)]="filters.created!.to">
+      </div>
+      <div class="date-filter">
+        <label>Updated From:</label>
+        <input type="date" [(ngModel)]="filters.updated!.from">
+      </div>
+      <div class="date-filter">
+        <label>Updated To:</label>
+        <input type="date" [(ngModel)]="filters.updated!.to">
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button class="filter-apply" (click)="applyFilters()">Apply Filters</button>
+      <button class="filter-reset" (click)="resetFilters()">Reset</button>
+    </div>
+  </div>
+
+  <div class="autocomplete-results" [class.active]="showResults || isLoading" [class.with-filters]="showFilters">
+    <div class="results-header" *ngIf="!isLoading && searchResults.length > 0">
+      <div class="results-info">
+        <span class="results-count">{{ searchResults.length }} results found</span>
+        <div class="active-filters" *ngIf="activeFiltersCount > 0">
+          <span class="filters-label">Filters:</span>
+          <div class="filter-tags">
+            <span class="filter-tag" *ngFor="let filter of activeFiltersList" (click)="removeFilter(filter)">
+              {{ filter.value }} <i class="fa fa-times"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading">Searching...</div>
+
+    <ng-container *ngIf="!isLoading">
+      <div *ngIf="searchResults.length === 0" class="loading">No results found</div>
+
+      <app-result-item
+        *ngFor="let ticket of searchResults"
+        [ticket]="ticket"
+        [searchTerm]="searchTerm"
+        (searchUpdate)="updateSearch($event)"
+      ></app-result-item>
+    </ng-container>
+  </div>
+
+  <div class="powered-by">powered by mobius ai</div>
+</div>

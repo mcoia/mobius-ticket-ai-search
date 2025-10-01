@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RT-Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #e5e5e7;
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            background-image: url(textures/black-paper.png), linear-gradient(#dadada, #c3c3c3);
+            background-blend-mode: soft-light;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            font-weight: 400;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: #1d1d1f;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-input::placeholder {
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .powered-by {
+            text-align: right;
+            margin-right: 20px;
+            font-size: 0.75rem;
+            font-weight: 300;
+            color: #b5b5b5;
+            border-radius: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .autocomplete-results {
+            position: absolute;
+            top: calc(4.5rem + 1.1rem);
+            left: 2.5rem;
+            right: 2.5rem;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: overlay;
+            display: none;
+            overscroll-behavior: contain;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+
+            &::-webkit-scrollbar {
+                width: 8px;
+                background: transparent;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: transparent;
+                margin: 4px 0;
+                border-radius: 4px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: #c0c0c0;
+                border-radius: 4px;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+                transition: background 0.2s ease;
+            }
+
+            &::-webkit-scrollbar-thumb:hover {
+                background: #a0a0a0;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+            }
+
+            &::-webkit-scrollbar-thumb:active {
+                background: #808080;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+            }
+
+            scrollbar-width: thin;
+            scrollbar-color: #c0c0c0 transparent;
+            scroll-behavior: smooth;
+        }
+
+        .autocomplete-results.active {
+            display: block;
+        }
+
+        .result-item {
+            padding: 1.25rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .result-item:hover {
+            background-color: #f8f8f8;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            background: #f0f0f0;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .meta-tag.status {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .meta-tag.sentiment {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .result-content {
+            margin-bottom: 0.75rem;
+        }
+
+        .section-content {
+            font-size: 0.85rem;
+            color: #444;
+            line-height: 1.4;
+        }
+
+        .keywords, .key-points {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .keyword {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 12px;
+        }
+
+        .key-point {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border-radius: 12px;
+        }
+
+        .highlight {
+            background-color: #ffeeba;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 1.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="search-container">
+    <input type="text"
+           class="search-input"
+           placeholder="Search tickets..."
+           aria-label="Search"
+           autocomplete="off"
+    >
+    <div class="autocomplete-results"></div>
+    <div class="powered-by">powered by mobius ai</div>
+</div>
+<script>
+    const searchInput = document.querySelector('.search-input');
+    const resultsContainer = document.querySelector('.autocomplete-results');
+
+    function highlightMatch(text, searchTerm) {
+        if (!searchTerm || !text) return text || '';
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    function renderKeywords(keywords, searchTerm) {
+        if (!keywords || !Array.isArray(keywords)) return '';
+
+        return keywords.map(keyword => {
+            let word = '';
+            if (typeof keyword === 'string') {
+                word = keyword;
+            } else if (keyword && keyword.word) {
+                word = keyword.word;
+            }
+            return word ? `<span class="keyword">${highlightMatch(word, searchTerm)}</span>` : '';
+        }).join('');
+    }
+
+    function renderKeyPoints(keyPoints, searchTerm) {
+        if (!keyPoints || !Array.isArray(keyPoints)) return '';
+
+        return keyPoints.map(point => {
+            let pointText = '';
+            if (typeof point === 'string') {
+                pointText = point;
+            } else if (point && point.point) {
+                pointText = point.point;
+            }
+            return pointText ? `<span class="key-point">${highlightMatch(pointText, searchTerm)}</span>` : '';
+        }).join('');
+    }
+
+    function createResultItem(ticket, searchTerm) {
+        return `
+            <div class="result-item">
+                <div class="result-header">
+                    <div>
+                        <div class="result-title">${highlightMatch(ticket.title, searchTerm)}</div>
+                        <div class="result-meta">
+                            <span class="meta-tag">${ticket.requesting_entity || 'Unknown'}</span>
+                            <span class="meta-tag">${ticket.category || 'Uncategorized'}</span>
+                            <span class="meta-tag status">${ticket.status || 'Unknown'}</span>
+                            <span class="meta-tag sentiment">Sentiment: ${ticket.customer_sentiment_score || 0}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-content">
+                    <div class="section-content">${highlightMatch(ticket.summary, searchTerm)}</div>
+                </div>
+
+                <div class="keywords">
+                    ${renderKeywords(ticket.keywords, searchTerm)}
+                </div>
+
+                <div class="key-points">
+                    ${renderKeyPoints(ticket.key_points_discussed, searchTerm)}
+                </div>
+            </div>
+        `;
+    }
+
+    async function searchAPI(searchTerm) {
+        try {
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ searchTerm })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.hits || [];
+        } catch (error) {
+            console.error('Search error:', error);
+            return [];
+        }
+    }
+
+    async function showResults(searchTerm) {
+        if (!searchTerm) {
+            resultsContainer.classList.remove('active');
+            return;
+        }
+
+        // Show loading indicator
+        resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+        resultsContainer.classList.add('active');
+
+        const results = await searchAPI(searchTerm);
+
+        if (results.length > 0) {
+            resultsContainer.innerHTML = results
+                .map(ticket => createResultItem(ticket, searchTerm))
+                .join('');
+            resultsContainer.classList.add('active');
+        } else {
+            resultsContainer.innerHTML = '<div class="loading">No results found</div>';
+            // Keep the results container visible to show the "No results found" message
+        }
+    }
+
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            showResults(e.target.value.trim());
+        }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.classList.remove('active');
+        }
+    });
+
+    resultsContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+</script>
+</body>
+</html>

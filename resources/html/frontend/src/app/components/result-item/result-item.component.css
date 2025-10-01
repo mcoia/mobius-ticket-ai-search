@@ -1,0 +1,110 @@
+.result-item {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+  border-radius: 0 0 12px 12px;
+}
+
+
+.result-item:hover {
+  background-color: #f8f8f8;
+  border-radius: 0;
+}
+
+.result-item:hover::after {
+  content: "View details →";
+  position: absolute;
+  bottom: 5px;
+  right: 15px;
+  font-size: 0.75rem;
+  color: #1a73e8;
+}
+
+.ticket_created_updated{
+  color: #888;
+  font-size: 0.65rem;
+  margin-left: 1rem;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.result-title {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.result-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  background: #f0f0f0;
+  border-radius: 12px;
+  color: #666;
+}
+
+.meta-tag.status {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.meta-tag.sentiment {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.result-content {
+  margin-bottom: 0.75rem;
+}
+
+.section-content {
+  font-size: 0.85rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+.keywords, .key-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.keyword {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: #e8f0fe;
+  color: #1a73e8;
+  border-radius: 12px;
+}
+
+.key-point {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border-radius: 12px;
+}
+
+:host ::ng-deep .highlight {
+  background-color: #ffeeba;
+  padding: 0 2px;
+  border-radius: 2px;
+}

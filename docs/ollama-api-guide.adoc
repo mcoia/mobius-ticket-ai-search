@@ -1,0 +1,201 @@
+= Ollama API Remote Access Guide
+:toc: left
+:icons: font
+:source-highlighter: highlight.js
+
+== Introduction
+
+This guide explains how to configure Ollama to accept API requests from remote machines on your network. By default, Ollama only listens on `localhost`, which restricts access to the local machine.
+
+Download ollama here: https://ollama.com/download
+
+== Prerequisites
+
+* Ubuntu Linux 24.04 (or similar distribution)
+* Ollama installed
+
+== Configuration Steps
+
+=== 1. Stop the Ollama Service
+
+First, stop the running Ollama service:
+
+[source,bash]
+----
+sudo systemctl stop ollama
+----
+
+=== 2. Configure Ollama to Listen on All Network Interfaces
+
+==== Method 1: Using systemd Override
+
+Create or edit a systemd override file for Ollama:
+
+[source,bash]
+----
+sudo systemctl edit ollama
+----
+
+Add the following configuration:
+
+[source]
+----
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+----
+
+Save and exit the editor.
+
+==== Method 2: Using Configuration File (Alternative)
+
+If your Ollama installation uses a configuration file:
+
+[source,bash]
+----
+sudo mkdir -p /etc/ollama
+sudo nano /etc/ollama/ollama.conf
+----
+
+Add the following line:
+
+[source]
+----
+host = "0.0.0.0:11434"
+----
+
+Save and exit the editor.
+
+=== 3. Reload systemd Configuration
+
+[source,bash]
+----
+sudo systemctl daemon-reload
+----
+
+=== 4. Start Ollama Service
+
+[source,bash]
+----
+sudo systemctl start ollama
+----
+
+=== 5. Configure Firewall (if enabled)
+
+If UFW or another firewall is active, allow traffic on port 11434:
+
+[source,bash]
+----
+sudo ufw allow 11434/tcp
+----
+
+=== 6. Install Required Models
+
+For the RT Search Application, you need to pull the nomic embedding model:
+
+[source,bash]
+----
+ollama pull nomic-embed-text:latest
+----
+
+Verify the model is available:
+
+[source,bash]
+----
+ollama list
+----
+
+You should see `nomic-embed-text:latest` in the output.
+
+=== 7. Verify Configuration
+
+Check if Ollama is listening on all interfaces:
+
+[source,bash]
+----
+sudo netstat -tulpn | grep 11434
+----
+
+You should see output showing Ollama listening on `0.0.0.0:11434`.
+
+== Using the API Remotely
+
+Once configured, you can access the Ollama API from remote machines using:
+
+[source,bash]
+----
+curl http://<SERVER_IP>:11434/api/<ENDPOINT> -d '<JSON_DATA>'
+----
+
+=== Example: Generate Embeddings
+
+[source,bash]
+----
+curl http://192.168.11.164:11434/api/embeddings -d '{
+  "model": "nomic-embed-text",
+  "prompt": "The sky is blue because of Rayleigh scattering"
+}'
+----
+
+=== Example: Generate Text Completion
+
+[source,bash]
+----
+curl http://192.168.11.164:11434/api/generate -d '{
+  "model": "llama3",
+  "prompt": "The capital of France is"
+}'
+----
+
+== Security Considerations
+
+IMPORTANT: Exposing your Ollama API to the network comes with security implications.
+
+=== Recommended Security Measures
+
+* *Limited Network Access*: Configure your network to only allow trusted IPs
+* *Reverse Proxy*: Use Nginx or Apache as a reverse proxy with authentication
+* *SSL/TLS*: Set up SSL certificates for encrypted communication
+* *API Keys*: Implement an API key system for authentication if needed
+
+== Troubleshooting
+
+If you encounter connectivity issues:
+
+1. *Verify Service Status*:
++
+[source,bash]
+----
+sudo systemctl status ollama
+----
+
+2. *Check Network Configuration*:
++
+[source,bash]
+----
+sudo netstat -tulpn | grep 11434
+----
+
+3. *Test Local Access First*:
++
+[source,bash]
+----
+curl http://localhost:11434/api/models
+----
+
+4. *Check Firewall Rules*:
++
+[source,bash]
+----
+sudo ufw status
+----
+
+5. *Inspect Logs*:
++
+[source,bash]
+----
+sudo journalctl -u ollama -n 50
+----
+
+== Conclusion
+
+You've now configured Ollama to accept API requests from remote machines on your network. This setup enables you to leverage Ollama's capabilities across multiple devices while maintaining control over the server configuration.

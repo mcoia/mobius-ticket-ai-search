@@ -1,0 +1,34 @@
+<div class="result-item" (click)="viewTicketDetails()">
+  <div class="result-header">
+    <div>
+      <div class="result-title" [innerHTML]="ticket.title | highlight:searchTerm"></div>
+      <div class="result-meta">
+        <span class="meta-tag" (click)="onMetaTagClick($event, ticket.requesting_entity || 'Unknown')">{{ ticket.requesting_entity || 'Unknown' }}</span>
+        <span class="meta-tag" (click)="onMetaTagClick($event, ticket.category || 'Uncategorized')">{{ ticket.category || 'Uncategorized' }}</span>
+        <span class="meta-tag status" (click)="onMetaTagClick($event, ticket.status || 'Unknown')">{{ ticket.status || 'Unknown' }}</span>
+        <!--        <span class="meta-tag sentiment" (click)="onMetaTagClick($event, 'Sentiment: ' + (ticket.customer_sentiment_score || 0) + '%')">Sentiment: {{ ticket.customer_sentiment_score || 0 }}%</span>-->
+      </div>
+    </div>
+    <div class="ticket_created_updated" *ngIf="ticket.ticket_id">
+      <p>Ticket: #{{ ticket.ticket_id}}</p>
+      <p>Created: {{ ticket.created | date}}</p>
+      <p>Updated: {{ ticket.last_updated | date}}</p>
+    </div>
+  </div>
+
+  <div class="result-content">
+    <div class="section-content" [innerHTML]="ticket.summary | highlight:searchTerm"></div>
+  </div>
+
+  <div class="keywords" *ngIf="ticket.keywords && ticket.keywords.length > 0">
+    <span class="keyword" *ngFor="let keyword of ticket.keywords"
+          [innerHTML]="getKeywordText(keyword) | highlight:searchTerm"
+          (click)="onKeywordClick($event, keyword)"></span>
+  </div>
+
+  <div class="key-points" *ngIf="ticket.key_points_discussed && ticket.key_points_discussed.length > 0">
+    <span class="key-point" *ngFor="let keyPoint of ticket.key_points_discussed"
+          [innerHTML]="getKeyPointText(keyPoint) | highlight:searchTerm"
+          (click)="onKeyPointClick($event, keyPoint)"></span>
+  </div>
+</div>

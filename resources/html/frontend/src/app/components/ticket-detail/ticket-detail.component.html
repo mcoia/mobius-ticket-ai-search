@@ -1,0 +1,110 @@
+<div class="ticket-container">
+  <!--  <button class="back-button" (click)="goBack()">Back to results</button>-->
+  <button class="back-button" (click)="goBack()"><i class="fa fa-left-long"></i> Back to results</button>
+
+  <div *ngIf="isLoading" class="loading">Loading ticket details...</div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="ticket && !isLoading" class="ticket-detail">
+    <!-- Header section -->
+    <div class="result-header">
+      <div>
+        <h1 class="ticket-title">{{ ticket.title }}</h1>
+        <div class="result-meta">
+          <span class="meta-tag"
+                (click)="onMetaTagClick(ticket.requesting_entity || 'Unknown')">{{ ticket.requesting_entity || 'Unknown' }}</span>
+          <span class="meta-tag"
+                (click)="onMetaTagClick(ticket.category || 'Uncategorized')">{{ ticket.category || 'Uncategorized' }}</span>
+          <span class="meta-tag"
+                (click)="onMetaTagClick(ticket.queue || 'Not assigned')">Queue: {{ ticket.queue || 'Not assigned' }}</span>
+          <span class="meta-tag status"
+                (click)="onMetaTagClick(ticket.status || 'Unknown')">{{ ticket.status || 'Unknown' }}</span>
+          <!--                    <span class="meta-tag sentiment" (click)="onMetaTagClick('Sentiment: ' + (ticket.customer_sentiment_score || 0) + '%')">Sentiment: {{ ticket.customer_sentiment_score || 0 }}%</span>-->
+        </div>
+      </div>
+      <div class="ticket-id">
+        <span>Ticket # {{ ticket.ticket_id }}</span>
+      </div>
+    </div>
+
+    <!-- Content sections -->
+    <div class="ticket-sections">
+      <!-- Ticket as question -->
+      <div class="ticket-section" *ngIf="ticket.ticket_as_question">
+        <h2 class="section-title">Ticket Formatted as Question</h2>
+        <div class="section-content">{{ ticket.ticket_as_question }}</div>
+      </div>
+
+      <!-- Summary section -->
+      <div class="ticket-section">
+        <h2 class="section-title">Summary</h2>
+        <div class="section-content">{{ ticket.summary || 'No summary available' }}</div>
+      </div>
+
+      <!-- Detailed summary section -->
+      <div class="ticket-section" *ngIf="ticket.summary_long">
+        <h2 class="section-title">Detailed Summary</h2>
+        <div class="section-content">{{ ticket.summary_long }}</div>
+      </div>
+
+      <!-- Contextual details -->
+      <div class="ticket-section" *ngIf="ticket.contextual_details">
+        <h2 class="section-title">Contextual Details</h2>
+        <div class="section-content">{{ ticket.contextual_details }}</div>
+      </div>
+
+      <!-- Technical details -->
+      <div class="ticket-section" *ngIf="ticket.contextual_technical_details">
+        <h2 class="section-title">Technical Details</h2>
+        <div class="section-content">{{ ticket.contextual_technical_details }}</div>
+      </div>
+
+      <!-- Data patterns -->
+      <div class="ticket-section" *ngIf="ticket.data_patterns_or_trends">
+        <h2 class="section-title">Data Patterns & Trends</h2>
+        <div class="section-content">{{ ticket.data_patterns_or_trends }}</div>
+      </div>
+
+      <!-- Customer sentiment -->
+      <!--            <div class="ticket-section" *ngIf="ticket.customer_sentiment">-->
+      <!--                <h2 class="section-title">Customer Sentiment Analysis</h2>-->
+      <!--                <div class="section-content">{{ ticket.customer_sentiment }}</div>-->
+      <!--            </div>-->
+
+      <!-- Keywords section -->
+      <div class="ticket-section" *ngIf="ticket.keywords && ticket.keywords.length > 0">
+        <h2 class="section-title">Keywords</h2>
+        <div class="keywords">
+                    <span class="keyword" *ngFor="let keyword of ticket.keywords" (click)="onKeywordClick(keyword)">
+                        {{ getKeywordText(keyword) }}
+                    </span>
+        </div>
+      </div>
+
+      <!-- Key points section -->
+      <div class="ticket-section" *ngIf="ticket.key_points_discussed && ticket.key_points_discussed.length > 0">
+        <h2 class="section-title">Key Points Discussed</h2>
+        <div class="key-points">
+                    <span class="key-point" *ngFor="let keyPoint of ticket.key_points_discussed"
+                          (click)="onKeyPointClick(keyPoint)">
+                        {{ getKeyPointText(keyPoint) }}
+                    </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer section -->
+    <!--    <div class="ticket-footer">-->
+    <!--            <span class="meta-info" *ngIf="ticket.model_used">Analyzed by {{ ticket.model_used }}</span>-->
+    <!--    </div>-->
+
+  </div>
+  <p class="disclaimer">
+    This summary is generated using AI and is intended to provide a general overview of our support tickets. While
+    we strive for accuracy, AI-generated content may occasionally contain errors, omissions, or misinterpretations.
+    Please refer to the original support tickets for the most accurate and detailed information.
+
+    If you notice any discrepancies or have concerns, feel free to reach out to our support team for clarification.
+  </p>
+</div>

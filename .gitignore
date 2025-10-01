@@ -1,0 +1,15 @@
+.idea
+.vscode
+resources/html/node_modules
+rt.conf
+_Deparsed_XSubs.pm
+resources/folio
+resources/html/frontend/node_modules
+resources/html/server/public
+*.log
+rt.log
+notes.txt
+resources/html/.env
+resources/html/frontend/node_modules
+resources/html/server/node_modules
+

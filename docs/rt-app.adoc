@@ -1,0 +1,628 @@
+= Request Tracker Search Application
+:toc:
+:toc-title: Table of Contents
+ifndef::env-site,env-github[]
+include::_attributes.adoc[]
+endif::[]
+// Settings
+:idprefix:
+:idseparator: -
+
+== Local Server VM Summary
+
+[cols="1,2a",options=header]
+|===
+|Service
+|Details
+|Hosting
+|Office Hyper-V
+|OS
+|Ubuntu 24.04
+|IP
+|192.168.11.164
+|Machine specs
+|16CPU, 8GB memory
+|Elasticsearch
+|Version 7.x+
+|Ports
+|22, 5432, 11434 (Ollama)
+|Services
+|PostgreSQL, Ollama embedding model
+|Setup repos
+|Main application: https://github.com/mcoia/rt-search-app.git
+|Usage
+|This server scans & stores Request Tracker tickets in PostgreSQL and uses Ollama to generate embeddings for the ticket data.
+It's also responsible for pushing the data to Elasticsearch.
+
+|===
+
+== Cloud based VM Summary (GOOGLE)
+
+[cols="1,2a",options=header]
+|===
+|Service
+|Details
+|Hosting
+|Office Hyper-V
+|OS
+|Ubuntu 24.04
+|Machine specs
+|2CPU, 4GB memory
+|Database
+|PostgreSQL
+|Elasticsearch
+|Version 7.x+
+|Ports
+|22, 9200, 11434 (Ollama)
+|Services
+|Elasticsearch, Ollama embedding model
+|Setup repos
+|Main application: https://github.com/mcoia/rt-search-app.git
+|Usage
+|This server is used to host the Elasticsearch instance and the Ollama embedding model for the express.js/Angular web application.
+|===
+
+== Application Overview
+
+The RT Search Application consists of several components working together:
+
+1. **Data Processing Pipeline**: Perl-based modules that extract ticket data from Request Tracker, process it, and prepare it for analysis.
+2. **AI Service Integration**: Integration with AI models via the 4o_mini (OpenAI) and Gemini APIs to analyze tickets and generate structured summaries.
+3. **Vector Embeddings**: Uses Nomic embedding model via link:https://ollama.com/[Ollama] to generate vector embeddings for semantic search.
+4. **Elasticsearch Backend**: Stores processed ticket data, summaries, and vector embeddings to enable near instant searching.
+5. **Web Application Frontend**: Angular-based interface for users to search tickets with keyword & semantic understanding (hybrid search).
+6. **Node.js Backend**: Middleware that connects the frontend to Elasticsearch and manages embeddings generation.
+
+=== Perl Dependencies
+
+[source,perl]
+----
+LWP::UserAgent
+JSON
+DBIx::Simple
+SQL::Abstract
+MIME::Base64
+Data::Dumper
+Try::Tiny
+HTTP::Request
+Cwd
+
+
+cpan doesn't function like most package managers so you have to hunt down these errors and install dependencies manually.
+sudo apt update
+sudo apt install libpq-dev
+
+now you can install DBD::Pg
+
+----
+
+=== Node.js Dependencies
+
+[source,javascript]
+----
+express.js
+cors
+path
+axios
+----
+
+== Installation
+
+=== PostgreSQL Setup
+
+[source,bash]
+----
+# Update the package list
+sudo apt update
+
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib
+
+# Start the PostgreSQL service
+sudo systemctl start postgresql
+
+# Enable PostgreSQL to start on boot
+sudo systemctl enable postgresql
+
+# Switch to the postgres user
+sudo -i -u postgres
+
+# Access the PostgreSQL prompt
+psql
+
+# (Optional) Set a password for the postgres user
+\password postgres
+
+# I set the password for the postgres user to 'postgres'
+
+# Exit the PostgreSQL prompt
+\q
+
+# Exit the postgres user
+exit
+
+----
+
+pg_hba.conf file should be updated to allow connections from the office network.
+[source,bash]
+----
+vim /etc/postgresql/12/main/pg_hba.conf
+
+# Add the following line to allow external connections from the office network
+host    all             all             192.168.11.0/24         scram-sha-256
+
+----
+
+postgresql.conf file should be updated to allow connections 
+[source,bash]
+----
+vim /etc/postgresql/12/main/postgresql.conf
+
+# Add the following line to allow external connections 
+localhost = '*' 
+
+---- 
+
+
+1. Initialize the database schema: **(Hyper-V local VM)**
+
+[source,bash]
+----
+psql request_tracker -f schema.sql
+----
+
+=== Elasticsearch Setup
+
+1. Install Elasticsearch: **(Cloud VM)**
+
+[source,bash]
+----
+# Pull the Elasticsearch Docker image
+docker pull docker.elastic.co/elasticsearch/elasticsearch:7.x
+
+# Run Elasticsearch container
+docker run -d --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.x
+
+# Configure Elasticsearch
+sudo vim /etc/elasticsearch/elasticsearch.yml
+
+# Set network.host to allow external connections to Elasticsearch
+# This could be the MOBIUS office IP and not just completely open to the world.
+network.host: 0.0.0.0
+----
+
+2. Test Elasticsearch is running:
+
+[source,bash]
+----
+curl http://34.172.8.54:9200
+----
+
+=== Ollama Setup
+
+1. Install Ollama: **(Hyper-V local & Cloud VM)**
+
+[source,bash]
+----
+curl -fsSL https://ollama.com/install.sh | sh
+----
+
+2. Pull the nomic-embed-text model:
+
+[source,bash]
+----
+ollama pull nomic-embed-text:latest
+----
+
+3. Start the Ollama service:
+
+[source,bash]
+----
+systemctl enable ollama
+systemctl start ollama
+----
+
+
+=== Application Setup (Office Hyper-V)
+
+1. Clone the repository:
+
+[source,bash]
+----
+git clone https://github.com/mcoia/rt-search-app.git /home/ma/repo/rt-search-app
+cd /home/ma/repo/rt-search-app
+----
+
+1. Create the configuration file:
+
+[source,bash]
+----
+vim rt.conf
+----
+
+This is the base configuration that I have so far.
+
+[source,bash]
+----
+# Request tracker authentication credentials
+user = root
+pass = x54U5aphuT-
+domain = https://help.mobiusconsortium.org
+
+# Database connection
+dbname = postgres
+host = localhost
+username = postgres
+password = postgres
+schema = request_tracker
+
+# Queue's to monitor
+queues = FOLIO,OpenRS,Enhancements
+
+# General configuration
+log_file = rt.log
+user_agent = Request_Tracker_API
+
+# Elasticsearch configuration
+es_url = http://{your-cloud-vm-ip-here}:9200
+es_user = elastic
+es_pass = your_password_here
+
+# AI configuration
+prompt_file = resources/prompt/prompt.xml
+
+# OpenAI configuration
+openai_url = https://api.openai.com/v1/chat/completions
+openai_key = {api-key-here} 
+openai_model = gpt-4o-mini
+
+# Google AI configuration
+gemini_ai_url = https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+gemini_ai_key = {api-key-here}
+gemini_ai_model = gemini-2.0-flash
+
+nomic_ai_url = http://192.168.11.164:11434
+nomic_ai_key = no-key-needed
+nomic_ai_model = nomic-embed-text:latest
+
+# Folio Docs - Clone the folio docs repo to this directory.
+folio_docs_path = resources/folio/docs/content/en/docs
+
+# Cloud VM configuration
+cloud_ip = {your-cloud-vm-ip-here}
+
+----
+
+This is a 'deployment script' to deploy the frontend and backend to the cloud VM.
+It builds the front end and ships everything to the cloud VM.
+
+[source,bash]
+----
+cd ./rt-search/resources/html/
+./deploy.sh
+----
+
+[source,bash]
+----
+cd ./rt-search/resources/html/server
+npm install
+----
+
+1. Build the Angular frontend:
+
+[source,bash]
+----
+cd ./resources/html/frontend
+npm install
+ng build --prod
+----
+
+NOTE: All development is done locally.
+The cloud VM does nothing but host the application. npm install should be run locally and the deploy.sh script sends everything to the cloud VM needs to run the application.
+
+=== Application Setup (Cloud VM)
+
+1. Install Docker for Elasticsearch:
+
+https://docs.docker.com/engine/install/ubuntu/
+
+[source,bash]
+----
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+# Now install Docker:
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+----
+
+2. Configure Apache or Nginx as a reverse proxy:
+* Consult with the ngnix.default file for the configuration.
+
+**_Blake, you might need to adjust the configuration to fit, but I copied this from the cloud VM._**
+
+[source,bash]
+----
+# this is the gist from the ngnix.default file, I just copied and pasted the relevant parts. 
+
+    location / {
+        proxy_pass http://localhost:10000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+
+    location /.well-known {
+        root /var/www/letsencrypt_shared_web_directory;
+    }
+
+}
+
+# Virtual Host configuration for example.com
+#
+# You can move that to a different file under sites-available/ and symlink that
+# to sites-enabled/ to enable it.
+#
+
+server {
+    listen 443 ssl http2;
+
+
+    # Fix the file upload limitation
+    client_max_body_size 100m;
+
+    # Use the same SSL certificate as Apache.
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+
+
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+
+    location / {
+        proxy_pass http://localhost:10000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+
+
+
+}
+----
+
+== Application Architecture
+
+=== Component Structure
+
+1. **Request Tracker Service**: Main orchestration module
+- `RequestTrackerService.pm`: Coordinates the overall ticket processing workflow
+- `RequestTrackerAPI.pm`: Handles communication with the RT API
+- `RequestTrackerElastic.pm`: Manages Elasticsearch interactions
+- `RequestTrackerWiki.pm`: Processes wiki pages for context
+
+2. **AI Factory**: Manages AI model interfaces
+- `AIFactory.pm`: Factory pattern to create appropriate AI interfaces
+- `AI.pm`: Base abstract class for AI services
+- `AI::4o_mini.pm`: OpenAI model implementation
+- `AI::Gemini.pm`: Google Gemini model implementation
+- `AI::NomicEmbeddingModel.pm`: Text embedding model
+
+3. **Database Access**:
+- `DAO.pm`: Data Access Object for PostgreSQL
+
+4. **Web Application**:
+- `rt-app.js`: Node.js Express server
+- Angular components in the frontend directory
+
+=== Data Flow
+
+1. **Data Ingestion**:
+- `processTicketQueues()` fetches tickets from RT
+- Ticket metadata and history are extracted and saved to PostgreSQL
+
+2. **AI Processing**:
+- `buildAISummaries()` analyzes tickets using AI and the prompt template in `prompt.xml`
+- Summaries include categorization, technical details, key points and keywords.
+- `buildTicketEmbeddings()` creates vector embeddings for semantic search
+
+3. **Data Indexing**:
+- Processed ticket data is indexed in Elasticsearch
+- Multiple indices are used for different aspects (summaries, embeddings, wiki pages)
+
+4. **Search Process**:
+- Users initiate a search query through the web interface.
+- The query undergoes preprocessing to determine if it matches a ticket ID pattern (e.g., `#12345` or `12345`).
+- If it matches, a direct lookup is performed in Elasticsearch for an exact match.
+- If no exact match is found, the process continues with semantic and keyword search.
+- The query is embedded into a vector representation using the Nomic embedding model via link:https://ollama.com/[Ollama].
+- **Semantic Search**:
+- The embedding is used to perform a semantic search in two Elasticsearch indices:
+- **Original Embeddings Index**: Searches for tickets based on their original embeddings.
+- **Summary Embeddings Index**: Searches for tickets based on their summary embeddings.
+- Results from both indices are combined and scored using configurable weights.
+- **Keyword Search**:
+- If no relevant results are found via embeddings (semantic search), the system falls back to a text-based keyword search.
+- If the semantic search returns results, they are combined and rescored based on keyword matches.
+- The search is performed across multiple fields (e.g., title, summary, keywords) with optional fuzzy matching.
+- **Rescoring and Ranking**:
+- Results retrieved via embeddings are rescored based on keyword matches.
+- Boosting factors are applied to prioritize matches in specific fields (e.g., ticket ID, title, summary).
+- Results are filtered based on a minimum score threshold, sorted by relevance, and returned to the user.
+
+== Usage
+
+=== Processing RT Tickets
+
+To process new tickets from RT and generate summaries:
+
+[source,bash]
+----
+/home/ma/repo/rt-search/rt.pl
+
+----
+
+This will:
+
+1. Fetch new tickets from the specified RT queues
+2. Process ticket metadata and content
+3. Generate AI summaries for tickets
+4. Create embeddings for semantic search
+5. Index everything in Elasticsearch
+
+=== Processing Configuration
+
+The main processing workflow is controlled by several methods in `RequestTrackerService.pm`:
+
+- `processTicketQueues()`: Main entry point for ticket processing
+- `buildAISummaries()`: Generates AI-powered summaries
+- `buildTicketEmbeddings()`: Creates dense vector embeddings
+- `saveTicketSummaryElasticSearch()`: Indexes data in Elasticsearch
+
+=== Setting Up Cron Jobs
+
+To automate the ticket processing, set up a cron job:
+
+_This is just a placeholder.
+The actual cron job hasn't been set up yet.
+Will update when it's done._
+
+[source,bash]
+----
+# Add to crontab -e
+0 1 * * * cd /home/ma/repo/rt-search && perl -I. rt.pl >> /var/log/rt-search.log 2>&1
+----
+
+=== Web Interface
+
+The web interface is accessible at (e.g., https://rtaisearch.searchmobius.org).
+
+Only accessible via the office network and the MOBIUS wiki.
+
+== AI Models
+
+1. **Google Gemini**:
+- Primary model with a 2 million token limit and super duper cheap!
+- .10 cents per 1 million input tokens
+- .40 cents per 1 million output tokens
+- Context caching is .025 p/1Million tokens (We don't use this honestly)
+
+2. **OpenAI Models (4o_mini)**:
+- Deprecated but still here for reference.
+It was the primary model before Gemini.
+- .30 cents per 1 million input tokens
+- 1.20 cents per 1 million output tokens
+- Context caching is .15 p/1Million tokens
+
+3. **Embedding Model**:
+- Nomic embedding model for semantic search
+- This is not an LLM but a text embedding model.
+It's used for semantic search.
+- It generates 768-dimensional dense vector embeddings for text.
+- It's amazing!
+It's fast and it's free.
+
+To switch between AI models for summary generation, modify this line in the rt.pl file.
+
+[source,perl]
+----
+my $ai = AIFactory::createGemini2FlashAI();
+# or
+my $ai = AIFactory::create4o_miniAI();
+----
+
+NOTE: Use the AIFactory to create AI instances.
+This allows for easy switching between models.
+
+=== Elasticsearch Indices
+
+The application uses several Elasticsearch indices:
+
+1. **ticket_summary**: Stores the ai generated ticket summaries with their embeddings.
+2. **ticket_embeddings**: Stores vector embeddings of the original ticket for semantic search
+3. **wiki_pages**: Stores wiki context for augmented search
+4. **folio_docs**: Stores FOLIO documentation (optional)
+
+NOTE: Index mappings are defined in the `createIndex*` methods in `RequestTrackerService.pm`.
+
+=== Logs and Monitoring
+
+1. Application logs:
+- Node.js logs: systemd journal or `/var/log/rt-search.log`
+- Processing logs: wherever configured in main script
+
+2. Monitor disk space:
+- Elasticsearch data directory
+- PostgreSQL data directory
+
+3. Check Elasticsearch indices size:
+
+[source,bash]
+----
+curl -u elastic:your_password_here http://34.172.8.54:9200/_cat/indices?v
+----
+
+== Troubleshooting
+
+=== Diagnostic Commands
+
+1. Test Elasticsearch connection:
+
+[source,bash]
+----
+curl http://34.172.8.54:9200
+
+
+# Response should look something like this...
+{
+  "name" : "08f3dddf9c3d",
+  "cluster_name" : "docker-cluster",
+  "cluster_uuid" : "inek6DSUSPmEM7n0tVrjGw",
+  "version" : {
+    "number" : "7.5.2",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8bec50e1e0ad29dad5653712cf3bb580cd1afcdf",
+    "build_date" : "2020-01-15T12:11:52.313576Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.3.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+----
+
+2. Test Ollama embedding service:
+
+[source,bash]
+----
+curl -X POST http://192.168.11.164:11434/api/embeddings -d '{
+  "model": "nomic-embed-text:latest",
+  "prompt": "Test embedding"
+}'
+
+# Response should contain the embedding and look something like this. The actual embedding is a long array of numbers.
+{"embedding":[0.19906552135944366,1.3522040843963623,-3.6003477573394775, ...]}
+
+----
+

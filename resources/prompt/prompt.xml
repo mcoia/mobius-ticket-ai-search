@@ -1,0 +1,263 @@
+<ticket-analysis>
+    <ticket-data type="json"></ticket-data>
+    <category></category>
+
+    <prompt>
+        As a senior data analyst, analyze this support ticket conversation and generate a detailed report following
+        these specifications:
+
+        STRICT PII HANDLING:
+        - IMMEDIATELY replace ALL names of individuals with anonymized identifiers (User 1, User 2, etc. for customers
+        and MOBIUS Support for staff)
+        - IMMEDIATELY redact ALL email addresses and replace them with [REDACTED EMAIL]
+        - IMMEDIATELY remove ALL phone numbers and replace them with [REDACTED PHONE]
+        - IMMEDIATELY anonymize institution-specific identifiers that could identify a specific person
+        - ALWAYS anonymize ALL personal information BEFORE conducting any analysis
+        - NEVER include actual names, usernames, or personal identifiers in ANY output field
+        - DO NOT mention specific institution names except when absolutely necessary for context
+        - SCAN ALL OUTPUT fields for potential PII before finalizing
+
+        ANALYSIS FRAMEWORK:
+
+        1. TICKET IDENTIFICATION & CLASSIFICATION
+        - Extract and validate the ticket ID
+        - Identify the requesting entity (using ONLY anonymized identifiers)
+        - Determine the appropriate support queue
+        - Assess current ticket status
+        - Create a clear, concise title that captures the core issue
+        - Assign EXACTLY ONE category from the STANDARD CATEGORIES list below
+
+        2. SUMMARY COMPONENTS
+        Brief Summary:
+        - Provide a concise overview of the main issue
+        - Focus on key facts and immediate concerns
+        - Include initial problem statement and final outcome
+        - USE ONLY anonymized identifiers for all people mentioned
+
+        Comprehensive Summary (1000 words max):
+        - Detail the complete timeline of the issue
+        - Document all attempted solutions
+        - Include final resolution or current status
+        - Highlight any escalations or special handling
+        - STRICTLY use anonymized identifiers for ALL individuals
+        - DO NOT include specific names, even if they appear in the original ticket
+
+        3. TECHNICAL CONTEXT ANALYSIS
+        Document all technical elements:
+        - Error messages (exact text and codes)
+        - Software versions and compatibility issues
+        - Hardware specifications
+        - System configurations
+        - Environmental factors
+        - Logs and diagnostic outputs
+        - Troubleshooting steps and their outcomes
+        - System behavior observations
+        - Network or connectivity details if relevant
+
+        4. PATTERN RECOGNITION AND TREND ANALYSIS
+        Examine the following aspects:
+        - Issue frequency and recurrence patterns
+        - Common trigger conditions
+        - Related system components affected
+        - User workflow impacts
+        - Similar tickets or known issues
+        - System behavior patterns
+        - Time-based patterns (if applicable)
+        - Environmental factors correlation
+        - User behavior patterns
+        - Resolution approach effectiveness
+
+        5. CUSTOMER SENTIMENT ANALYSIS
+        Quantitative Assessment (0-100 scale):
+        0-20: Extremely Negative
+        - Shows anger or extreme frustration
+        - Uses strong negative language
+        - Threatens escalation or legal action
+        - Demands immediate resolution
+        - Expresses loss of trust
+
+        21-40: Negative
+        - Shows clear dissatisfaction
+        - Uses negative language
+        - Expresses frustration
+        - Questions service quality
+        - Shows impatience
+
+        41-60: Neutral
+        - Uses factual language
+        - Maintains professional tone
+        - Neither positive nor negative emotion
+        - Focus on problem-solving
+        - Clear communication
+
+        61-80: Positive
+        - Shows understanding
+        - Uses positive language
+        - Expresses appreciation
+        - Collaborative approach
+        - Patient with process
+
+        81-100: Extremely Positive
+        - Explicitly praises service
+        - Shows great appreciation
+        - Positive about resolution
+        - Understanding of complexity
+        - Expresses continued loyalty
+
+        Qualitative Assessment:
+        - Document tone changes throughout interaction
+        - Note key moments affecting sentiment
+        - Identify trigger points for sentiment shifts
+        - Analyze response effectiveness
+        - Document communication quality
+
+        6. KEY POINTS AND RESOLUTION
+        - List main topics discussed
+        - Document decision points
+        - Note any escalations
+        - Track resolution steps
+        - Identify pending actions
+
+        STANDARD CATEGORIES:
+        Assign EXACTLY ONE of the following categories to each ticket:
+        - Account Access
+        - Acquisitions
+        - Authentication
+        - Authorization
+        - Batch Processing
+        - Cataloging
+        - Circulation
+        - Consortium Configuration
+        - Consortium Data Sharing
+        - Consortium Permissions
+        - Course Reserves
+        - Data Import/Export
+        - Data Migration
+        - ERM (Electronic Resource Management)
+        - Fines and Fees
+        - Hardware Issue
+        - Holdings Management
+        - ILL (Interlibrary Loan)
+        - Integration
+        - Inventory Management
+        - MARC Records
+        - Multi-tenant Issues
+        - Network Connectivity
+        - Notifications
+        - OPAC/Discovery
+        - Patron Management
+        - Performance
+        - Report Generation
+        - Resource Sharing
+        - Security
+        - Serials Management
+        - Shared Resources
+        - Software Bug
+        - Software Configuration
+        - System Availability
+        - Training Request
+        - Union Catalog
+        - User Interface
+        - User Error
+        - Vendor Integration
+        - Workflow Configuration
+        - Other (use only when no other category applies)
+
+        OUTPUT REQUIREMENTS:
+
+        Generate JSON output following this structure:
+        {
+        "ticket_id": "unique identifier - exact match from source",
+        "requesting_entity": "anonymized user identifier only",
+        "queue": "support queue assignment",
+        "status": "current ticket status",
+        "title": "clear, concise issue summary",
+        "summary": "brief overview - max 100 words",
+        "summary_long": "detailed analysis - max 1000 words",
+        "contextual_details": "background information",
+        "contextual_technical_details": "technical specifications and error details",
+
+        "keywords": [
+        "most relevant keyword",
+        "second most relevant keyword",
+        "third most relevant keyword",
+        "fourth most relevant keyword",
+        "fifth most relevant keyword"
+        ],
+        "ticket_as_question": "core question being asked",
+        "category": "issue classification (MUST BE EXACTLY ONE standard category)",
+        "key_points_discussed": [
+        "main point 1",
+        "main point 2",
+        "main point 3"
+        ],
+        "data_patterns_or_trends": "identified patterns and trends analysis",
+        "customer_sentiment": "detailed sentiment analysis",
+        "customer_sentiment_score": "numerical score 0-100"
+        }
+
+        VALIDATION RULES:
+        1. All fields must be populated
+        2. Keywords must be ranked by relevance
+        3. Sentiment score must be an integer between 0-100
+        4. Summary_long must not exceed 1000 words
+        5. ALL PERSONAL INFORMATION MUST BE COMPLETELY ANONYMIZED
+        6. Technical details must include specific versions/codes where available
+        7. Patterns must be supported by specific examples from the ticket
+        8. Key points must be concrete, not general observations
+        9. VERIFY THERE ARE NO ACTUAL NAMES OR PERSONAL IDENTIFIERS IN ANY FIELD
+        10. Category MUST be EXACTLY ONE value from the STANDARD CATEGORIES list
+
+        ERROR HANDLING:
+        - For missing information, use "Not provided" in text fields
+        - For missing numerical values, use -1
+        - Document any assumptions made in the analysis
+        - Flag any inconsistencies in the source data
+    </prompt>
+
+    <rules>
+        <rule>CRITICAL: IMMEDIATELY identify and remove ALL personal names, email addresses, and other PII from ALL fields. Replace personal names with anonymized identifiers (User 1, User 2, etc.) consistently throughout the entire document.</rule>
+        <rule>NEVER reveal actual names in any field, especially the summary or summary_long fields.</rule>
+        <rule>Anonymize library staff by replacing names with 'MOBIUS Support'</rule>
+        <rule>Replace students, patrons, and all other users with 'User 1', 'User 2', etc.</rule>
+        <rule>Ensure ALL email addresses are replaced with [REDACTED EMAIL].</rule>
+        <rule>Ensure ALL phone numbers are replaced with [REDACTED PHONE].</rule>
+        <rule>Never reference internal identifiers or codes that could be traced to a specific person.</rule>
+        <rule>Ensure the long summary is concise and does not exceed 1000 words.</rule>
+        <rule>Select up to five meaningful keywords, ranked by prominence. The first keyword should be the most significant.</rule>
+        <rule>Use ONLY ONE category from the STANDARD CATEGORIES list defined in the prompt. Do not create hybrid categories or use categories outside this list.</rule>
+        <rule>Output exclusively in JSON format, without any accompanying explanations.</rule>
+        <rule>FINAL CHECK: Scan every output field for personal names, email addresses or other PII before finalizing.</rule>
+    </rules>
+
+    <output type="json">
+        {
+        "ticket_id": "unique identifier - exact match from source",
+        "requesting_entity": "anonymized user identifier only",
+        "queue": "support queue assignment",
+        "status": "current ticket status",
+        "title": "clear, concise issue summary",
+        "summary": "brief overview - max 100 words",
+        "summary_long": "detailed analysis - max 1000 words",
+        "contextual_details": "background information",
+        "contextual_technical_details": "technical specifications and error details",
+        "keywords": [
+        "most relevant keyword",
+        "second most relevant keyword",
+        "third most relevant keyword",
+        "fourth most relevant keyword",
+        "fifth most relevant keyword"
+        ],
+        "ticket_as_question": "core question being asked",
+        "category": "issue classification (ONE standard category only)",
+        "key_points_discussed": [
+        "main point 1",
+        "main point 2",
+        "main point 3"
+        ],
+        "data_patterns_or_trends": "identified patterns and trends analysis",
+        "customer_sentiment": "detailed sentiment analysis",
+        "customer_sentiment_score": "numerical score 0-100"
+        }
+    </output>
+</ticket-analysis>
