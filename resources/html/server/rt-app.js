@@ -60,46 +60,18 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Check if accessed in iframe - serve protection page that redirects if not in iframe
+// Security: Only allow access from iframe, block direct browser access
 app.get('/', (req, res) => {
-    // Serve a small HTML page that checks if it's in an iframe
-    res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>RT Search</title>
-    <script>
-        // Check if we're in an iframe and if parent is the allowed domain
-        if (window.self === window.top) {
-            // Not in iframe - direct access blocked
-            document.write('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
-        } else {
-            // In iframe - check if parent is from allowed domain
-            try {
-                var parentOrigin = document.referrer;
-                if (parentOrigin.startsWith('${ALLOWED_WIKI_DOMAIN}')) {
-                    // Valid - load the actual app
-                    window.location.href = '/app.html';
-                } else {
-                    document.write('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
-                }
-            } catch (e) {
-                // Cross-origin - assume it's valid since CSP will block unauthorized embedding anyway
-                window.location.href = '/app.html';
-            }
-        }
-    </script>
-</head>
-<body>
-    <p>Loading...</p>
-</body>
-</html>
-    `);
-});
+    const secFetchSite = req.get('Sec-Fetch-Site');
 
-// Serve the actual app at /app.html
-app.get('/app.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    // ONLY allow if loaded from cross-site (iframe from wiki)
+    if (secFetchSite === 'cross-site') {
+        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+
+    // Block everything else (direct access, old browsers, etc)
+    console.log(`⛔ Blocked access - Sec-Fetch-Site: ${secFetchSite || 'not set'}`);
+    return res.status(403).send('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
 });
 
 // Elasticsearch test endpoint
