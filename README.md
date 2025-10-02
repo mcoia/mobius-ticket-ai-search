@@ -151,18 +151,20 @@ The application uses a **distributed architecture** across two VMs for optimal p
 
 ### Data Flow
 
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐     ┌─────────┐
-│   RT API    │────▶│ Perl Scripts │────▶│  AI Models  │────▶│ Elasticsearch│────▶│   Web   │
-│   Tickets   │     │  (Ingestion) │     │ (Summary +  │     │  (Indexing)  │     │   UI    │
-│             │     │              │     │  Embedding) │     │              │     │         │
-└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘     └─────────┘
-                                                 │
-                                                 ▼
-                                          ┌─────────────┐
-                                          │ PostgreSQL  │
-                                          │ (Metadata)  │
-                                          └─────────────┘
+```mermaid
+graph LR
+    A[RT API<br/>Tickets] --> B[Perl Scripts<br/>Ingestion]
+    B --> C[AI Models<br/>Summary + Embedding]
+    C --> D[Elasticsearch<br/>Indexing]
+    C --> E[(PostgreSQL<br/>Metadata)]
+    D --> F[Web UI<br/>Search Interface]
+
+    style A fill:#e1f5ff,stroke:#01579b
+    style B fill:#f3e5f5,stroke:#4a148c
+    style C fill:#fff3e0,stroke:#e65100
+    style D fill:#e8f5e9,stroke:#1b5e20
+    style E fill:#fce4ec,stroke:#880e4f
+    style F fill:#e0f2f1,stroke:#004d40
 ```
 
 **Processing Pipeline**:
