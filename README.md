@@ -159,12 +159,12 @@ graph LR
     C --> E[(PostgreSQL<br/>Metadata)]
     D --> F[Web UI<br/>Search Interface]
 
-    style A fill:#e1f5ff,stroke:#01579b
-    style B fill:#f3e5f5,stroke:#4a148c
-    style C fill:#fff3e0,stroke:#e65100
-    style D fill:#e8f5e9,stroke:#1b5e20
-    style E fill:#fce4ec,stroke:#880e4f
-    style F fill:#e0f2f1,stroke:#004d40
+    style A fill:#e1f5ff,stroke:#01579b,color:#000
+    style B fill:#f3e5f5,stroke:#4a148c,color:#000
+    style C fill:#fff3e0,stroke:#e65100,color:#000
+    style D fill:#e8f5e9,stroke:#1b5e20,color:#000
+    style E fill:#fce4ec,stroke:#880e4f,color:#000
+    style F fill:#e0f2f1,stroke:#004d40,color:#000
 ```
 
 **Processing Pipeline**:
