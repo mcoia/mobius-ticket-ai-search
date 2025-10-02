@@ -4,7 +4,6 @@
 
 ### AI-Powered Semantic Search for Request Tracker Tickets
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-rtaisearch.searchmobius.org-blue?style=for-the-badge)](https://rtaisearch.searchmobius.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![MOBIUS](https://img.shields.io/badge/MOBIUS-Consortium-green?style=for-the-badge)](https://mobiusconsortium.org)
 
@@ -361,7 +360,6 @@ perl test.pl
 
 **Access Points**:
 - **Development**: `http://localhost:10000`
-- **Production**: `https://rtaisearch.searchmobius.org`
 
 **Search Capabilities**:
 - Direct ticket lookup: `#12345` or `12345`
