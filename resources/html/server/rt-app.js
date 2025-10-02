@@ -18,6 +18,9 @@ const port = 10000;
 
 */
 
+// ===== SECURITY CONFIGURATION =====
+const ALLOWED_WIKI_DOMAIN = 'https://wiki.mobiusconsortium.org';
+
 // Elasticsearch configuration
 const esConfig = {
     // url: 'http://34.172.8.54:9200', // <== Development
@@ -37,7 +40,40 @@ const ollamaConfig = {
     model: 'nomic-embed-text:latest'
 };
 
-app.use(cors());
+// ===== SECURITY MIDDLEWARE - Must come before other middleware =====
+// Set security headers to restrict iframe embedding to only your wiki
+app.use((req, res, next) => {
+    // CSP frame-ancestors is the modern standard for controlling iframe embedding
+    res.setHeader('Content-Security-Policy', `frame-ancestors 'self' ${ALLOWED_WIKI_DOMAIN}`);
+
+    // X-Frame-Options as fallback for older browsers
+    res.setHeader('X-Frame-Options', `ALLOW-FROM ${ALLOWED_WIKI_DOMAIN}`);
+
+    next();
+});
+
+// Check Referer header to block direct access
+app.use((req, res, next) => {
+    const referer = req.get('Referer') || req.get('Referrer') || '';
+
+    // Only allow requests if referer starts with your wiki domain
+    if (referer && referer.startsWith(ALLOWED_WIKI_DOMAIN)) {
+        return next();
+    }
+
+    // Block direct access - referer doesn't match wiki
+    console.log(`⛔ Blocked request from unauthorized referer: ${referer}`);
+    return res.status(403).json({
+        status: 'error',
+        message: 'Access denied: This application can only be accessed through the authorized wiki'
+    });
+});
+
+// ===== EXISTING MIDDLEWARE =====
+app.use(cors({
+    origin: 'https://wiki.mobiusconsortium.org',
+    credentials: true
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -339,10 +375,6 @@ async function generateEmbedding(text) {
         throw error;
     }
 }
-
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
 
 // Search endpoint with dedicated ticket ID search path
 app.post('/api/search', async (req, res) => {
@@ -824,9 +856,7 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
-
 function saveSearchLog(searchTerm) {
-
     const date = new Date().toISOString().split('T')[0]; // Get the current date in YYYY-MM-DD format
     const time = new Date().toISOString().split('T')[1].split('.')[0]; // Get the current time in HH:MM:SS format
     const logMessage = `[${searchTerm}] ${time}\n`;
@@ -849,5 +879,8 @@ function saveSearchLog(searchTerm) {
             });
         }
     });
-
 }
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
