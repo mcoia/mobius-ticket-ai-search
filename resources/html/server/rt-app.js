@@ -60,18 +60,46 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Referer check ONLY for the root route (not static assets)
+// Check if accessed in iframe - serve protection page that redirects if not in iframe
 app.get('/', (req, res) => {
-    const referer = req.get('Referer') || req.get('Referrer') || '';
+    // Serve a small HTML page that checks if it's in an iframe
+    res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RT Search</title>
+    <script>
+        // Check if we're in an iframe and if parent is the allowed domain
+        if (window.self === window.top) {
+            // Not in iframe - direct access blocked
+            document.write('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
+        } else {
+            // In iframe - check if parent is from allowed domain
+            try {
+                var parentOrigin = document.referrer;
+                if (parentOrigin.startsWith('${ALLOWED_WIKI_DOMAIN}')) {
+                    // Valid - load the actual app
+                    window.location.href = '/app.html';
+                } else {
+                    document.write('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
+                }
+            } catch (e) {
+                // Cross-origin - assume it's valid since CSP will block unauthorized embedding anyway
+                window.location.href = '/app.html';
+            }
+        }
+    </script>
+</head>
+<body>
+    <p>Loading...</p>
+</body>
+</html>
+    `);
+});
 
-    // Only allow if referer is from wiki
-    if (referer && referer.startsWith(ALLOWED_WIKI_DOMAIN)) {
-        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
-
-    // Block direct access
-    console.log(`⛔ Blocked direct access from: ${referer || 'no referer'}`);
-    return res.status(403).send('Access denied: This application can only be accessed through the authorized wiki');
+// Serve the actual app at /app.html
+app.get('/app.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Elasticsearch test endpoint
