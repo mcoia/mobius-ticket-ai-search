@@ -64,13 +64,17 @@ app.use(express.json());
 app.get('/', (req, res) => {
     const secFetchSite = req.get('Sec-Fetch-Site');
 
+    // Log all requests to see what we're getting
+    console.log(`📊 Request to / - Sec-Fetch-Site: [${secFetchSite || 'NOT SET'}], User-Agent: ${req.get('User-Agent')?.substring(0, 50)}`);
+
     // ONLY allow if loaded from cross-site (iframe from wiki)
     if (secFetchSite === 'cross-site') {
+        console.log(`✅ Allowed - cross-site iframe access`);
         return res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
 
     // Block everything else (direct access, old browsers, etc)
-    console.log(`⛔ Blocked access - Sec-Fetch-Site: ${secFetchSite || 'not set'}`);
+    console.log(`⛔ BLOCKED - Sec-Fetch-Site: ${secFetchSite || 'not set'}`);
     return res.status(403).send('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
 });
 
