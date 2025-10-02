@@ -57,11 +57,14 @@ app.use(cors({
     origin: 'https://wiki.mobiusconsortium.org',
     credentials: true
 }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
 
-// Security: Only allow access from iframe, block direct browser access
-app.get('/', (req, res) => {
+// Security: Check iframe access BEFORE serving any static files
+app.use((req, res, next) => {
+    // Only check the root path, allow static assets through
+    if (req.path !== '/') {
+        return next();
+    }
+
     const secFetchSite = req.get('Sec-Fetch-Site');
 
     // Log all requests to see what we're getting
@@ -70,13 +73,16 @@ app.get('/', (req, res) => {
     // ONLY allow if loaded from cross-site (iframe from wiki)
     if (secFetchSite === 'cross-site') {
         console.log(`✅ Allowed - cross-site iframe access`);
-        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        return next();
     }
 
     // Block everything else (direct access, old browsers, etc)
     console.log(`⛔ BLOCKED - Sec-Fetch-Site: ${secFetchSite || 'not set'}`);
     return res.status(403).send('<h1>Access Denied</h1><p>This application can only be accessed through the authorized wiki.</p>');
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
 // Elasticsearch test endpoint
 app.get('/api/test', async (req, res) => {
