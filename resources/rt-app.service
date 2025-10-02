@@ -4,8 +4,8 @@ After=network.target elasticsearch.service
 Wants=elasticsearch.service
 
 [Service]
-ExecStart=/usr/bin/node /home/ma/repo/rt-app/resources/html/server/rt-app.js
-WorkingDirectory=/home/ma/repo/server
+ExecStart=/usr/local/bin/node /home/ma/repo/mobius-ticket-ai-search/resources/html/server/rt-app.js
+WorkingDirectory=/home/ma/repo/mobius-ticket-ai-search/resources/html/server
 Restart=always
 RestartSec=10
 StandardOutput=syslog
