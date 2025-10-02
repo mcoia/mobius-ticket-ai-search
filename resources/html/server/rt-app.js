@@ -60,8 +60,18 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+// Referer check ONLY for the root route (not static assets)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    const referer = req.get('Referer') || req.get('Referrer') || '';
+
+    // Only allow if referer is from wiki
+    if (referer && referer.startsWith(ALLOWED_WIKI_DOMAIN)) {
+        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+
+    // Block direct access
+    console.log(`⛔ Blocked direct access from: ${referer || 'no referer'}`);
+    return res.status(403).send('Access denied: This application can only be accessed through the authorized wiki');
 });
 
 // Elasticsearch test endpoint
