@@ -52,23 +52,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Check Referer header to block direct access
-app.use((req, res, next) => {
-    const referer = req.get('Referer') || req.get('Referrer') || '';
-
-    // Only allow requests if referer starts with your wiki domain
-    if (referer && referer.startsWith(ALLOWED_WIKI_DOMAIN)) {
-        return next();
-    }
-
-    // Block direct access - referer doesn't match wiki
-    console.log(`⛔ Blocked request from unauthorized referer: ${referer}`);
-    return res.status(403).json({
-        status: 'error',
-        message: 'Access denied: This application can only be accessed through the authorized wiki'
-    });
-});
-
 // ===== EXISTING MIDDLEWARE =====
 app.use(cors({
     origin: 'https://wiki.mobiusconsortium.org',
